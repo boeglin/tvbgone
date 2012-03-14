@@ -6921,7 +6921,7 @@ const struct IrCode code_na022Code = {
 };
 #endif
 
-const struct IrCode *NApowerCodes[] = {
+const struct IrCode* const NApowerCodes[] = {
 #if NA_CODES
 	&code_na000Code,
 	&code_na001Code,
@@ -7065,7 +7065,7 @@ const struct IrCode *NApowerCodes[] = {
 #endif
 }; 
 
-const struct IrCode *EUpowerCodes[] = {
+const struct IrCode* const EUpowerCodes[] = {
 #if EU_CODES
 #if !NA_CODES
 	&code_na000Code,
