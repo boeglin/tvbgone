@@ -4,31 +4,24 @@
 
 // Divide by 4096
 #define DELTA (F_CPU >> 12)
-#define F_XTAL 4096
 
-int sync(void)
+void sync(void)
 {
-  uint16_t last, ldco, lbcs;
+  uint16_t last;
   int16_t diff = 0;
-  int tries=31;
-
-  // store previous values
-  ldco = DCOCTL;
-  lbcs = BCSCTL1;
-  P1OUT &= ~BIT6;
 
   // use SMCLK, clear
   TACTL = TASSEL_2 | TACLR;
   // capture on rising edge of ACLK 
-  TACCTL0 = CM_1 | CCIS_1 | CAP | CCIE;
+  TACCTL0 = CM_1 | CCIS_1 | CAP;
 
   /* calibrate */
-  while(diff != DELTA && tries--)
+  while(diff != DELTA)
   {
     // Start the timer
     TACTL |= MC_2;
 
-    // Reset capture
+    // Capture 0
     TACCTL0 &= ~CCIFG;
     while(!(TACCTL0 & CCIFG));
     last = TACCR0;
@@ -60,13 +53,5 @@ int sync(void)
       }
     }
   }
-
-  // check for a change
-  if(ldco != DCOCTL || lbcs != BCSCTL1)
-  {
-    P1OUT |= BIT6;
-  }
-
-  return 0;
 }
 

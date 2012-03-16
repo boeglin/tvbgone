@@ -218,10 +218,10 @@ int main(void)
   // enable interupts
   __eint();
 
-  //XXX debug
+  //XXX debug @ 440 Hz
   while(1)
   {
-    __delay_cycles(((F_CPU >> 1) / 440) - 10);
+    __delay_cycles((F_CPU >> 1) / 440);
     P1OUT ^= BIT0;
   }
 
