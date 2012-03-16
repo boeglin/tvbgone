@@ -1,1 +1,2 @@
-int sync(void);
+void sync(void);
+

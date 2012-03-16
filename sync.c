@@ -12,7 +12,7 @@ void sync(void)
 
   // use SMCLK, clear
   TACTL = TASSEL_2 | TACLR;
-  // capture on rising edge of ACLK 
+  // capture on rising edge of ACLK
   TACCTL0 = CM_1 | CCIS_1 | CAP;
 
   /* calibrate */
