@@ -7,3 +7,8 @@ struct IrCode {
   uint8_t codes[];
 };
 
+extern const struct IrCode* const NApowerCodes[];
+extern const struct IrCode* const EUpowerCodes[];
+
+const uint8_t num_NAcodes;
+const uint8_t num_EUcodes;
