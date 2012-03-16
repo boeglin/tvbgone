@@ -13,7 +13,7 @@ all: $(TARGET)
 $(TARGET): $(SRC:.c=.o)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(SRC:.c=.o) -o $@
 
-%.o: %.c
+%.o: %.c %.h
 	$(CC) -c $(CFLAGS) $< -o $@
 
 clean:
