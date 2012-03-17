@@ -20,6 +20,7 @@ depending on a pulldown resistor on pin B1 !
 #include "sync.h"
 #include "codes.h"
 
+void blast_code(const struct IrCode* code);
 /*
 This project transmits a bunch of TV POWER codes, one right after the other,
 with a pause in between each.  (To have a visible indication that it is
@@ -75,28 +76,25 @@ The hardware for this project is very simple:
                     make burn-fuse_cr
 */
 
+__attribute__((interrupt(TIMER0_A0_VECTOR)))
+void timer_pwm(void)
+{
+  // Toggle LED
+  P1OUT ^= BIT0;
+}
 
 /* This function is the 'workhorse' of transmitting IR codes.
    Given the on and off times, it turns on the PWM output on and off
    to generate one 'pair' from a long code. Each code has ~50 pairs! */
 void xmitCodeElement(uint16_t ontime, uint16_t offtime, uint8_t PWM_code )
 {
-#if 0
-  // start Timer0 outputting the carrier frequency to IR emitters on and OC0A
-  // (PB0, pin 5)
-  TCNT0 = 0; // reset the timers so they are aligned
-  TIFR = 0;  // clean out the timer flags
-
   if(PWM_code) {
-    // 99% of codes are PWM codes, they are pulses of a carrier frequecy
-    // Usually the carrier is around 38KHz, and we generate that with PWM
-    // timer 0
-    TCCR0A =_BV(COM0A0) | _BV(WGM01);          // set up timer 0
-    TCCR0B = _BV(CS00);
+    // Start PWM interrupt
+    TACCTL0 |= CCIE;
   } else {
     // However some codes dont use PWM in which case we just turn the IR
     // LED on for the period of time.
-    PORTB &= ~_BV(IRLED);
+    P1OUT |= BIT0;
   }
 
   // Now we wait, allowing the PWM hardware to pulse out the carrier
@@ -104,15 +102,15 @@ void xmitCodeElement(uint16_t ontime, uint16_t offtime, uint8_t PWM_code )
   delay_ten_us(ontime);
 
   // Now we have to turn it off so disable the PWM output
-  TCCR0A = 0;
-  TCCR0B = 0;
+  if(PWM_code)
+    TACCTL0 &= ~CCIE;
+
   // And make sure that the IR LED is off too (since the PWM may have
   // been stopped while the LED is on!)
-  PORTB |= _BV(IRLED);           // turn off IR LED
+  P1OUT &= ~BIT0;
 
   // Now we wait for the specified 'off' time
   delay_ten_us(offtime);
-#endif
 }
 
 /* This is kind of a strange but very useful helper function
@@ -124,21 +122,20 @@ void xmitCodeElement(uint16_t ontime, uint16_t offtime, uint8_t PWM_code )
 
 uint8_t bitsleft_r = 0;
 uint8_t bits_r=0;
-void* code_ptr;
+const uint8_t* code_ptr;
 
 // we cant read more than 8 bits at a time so dont try!
 uint8_t read_bits(uint8_t count)
 {
-  uint8_t i;
   uint8_t tmp=0;
 
-#if 0
+  uint8_t i;
   // we need to read back count bytes
   for (i=0; i<count; i++) {
     // check if the 8-bit buffer we have has run out
     if (bitsleft_r == 0) {
       // in which case we read a new byte in
-      bits_r = pgm_read_byte(code_ptr++);
+      bits_r = *code_ptr++;
       // and reset the buffer size (8 bites in a byte)
       bitsleft_r = 8;
     }
@@ -147,8 +144,8 @@ uint8_t read_bits(uint8_t count)
     // and shift it off of the end of 'bits_r'
     tmp |= (((bits_r >> (bitsleft_r)) & 1) << (count-1-i));
   }
+
   // return the selected bits in the LSB part of tmp
-#endif
   return tmp;
 }
 
@@ -218,11 +215,30 @@ int main(void)
   // enable interupts
   __eint();
 
-  //XXX debug @ 440 Hz
   while(1)
   {
-    __delay_cycles((F_CPU >> 1) / 440);
-    P1OUT ^= BIT0;
+    // Low Power Mode
+    LPM3;
+
+    // Interrupt wakeup!
+
+    // Sync the clock
+    sync();
+
+    // Blast codes
+    int i;
+    for(i = 0; i < num_NAcodes; ++i)
+    {
+      blast_code(NApowerCodes[i]);
+      quickflashLED();
+      delay_ten_us(25000);
+    }
+    for(i = 0; i < num_EUcodes; ++i)
+    {
+      blast_code(EUpowerCodes[i]);
+      quickflashLED();
+      delay_ten_us(25000);
+    }
   }
 
   return 0;
@@ -231,10 +247,42 @@ int main(void)
 __attribute__((interrupt(PORT1_VECTOR)))
 void port1_isr(void)
 {
+  // Reset interrupt flag
   P1IFG = 0;
 
-  // Sync the clock
-  sync();
+  LPM3_EXIT;
+}
+
+void blast_code(const struct IrCode* code)
+{
+  code_ptr = code->codes;
+
+  // Set carrier timer
+
+  // use SMCLK, clear
+  TACTL = TASSEL_2 | TACLR;
+  // Set period
+  TACCR0 = code->timer_val;
+  // Set simple Compare mode
+  TACCTL0 = 0;
+
+  // Start timer
+  TACTL |= MC_1;
+
+  int i;
+  for(i = 0; i < code->numpairs; ++i)
+  {
+    // Read the next 'n' bits as indicated by the compression variable
+    uint8_t time_index = read_bits(code->bitcompression);
+    xmitCodeElement(code->times[time_index * 2], code->times[time_index * 2 + 1], code->timer_val != 0);
+  }
+  //Flush remaining bits, so that next code starts
+  //with a fresh set of 8 bits.
+  bitsleft_r=0;	
+
+  // Stop Timer
+  TACTL = TACLR;
+}
 
 #if 0
   uint16_t ontime, offtime;
@@ -246,24 +294,6 @@ void port1_isr(void)
 
 #if 0
   do {	//Execute the code at least once.  If Loop is on, execute forever.
-
-    // We may have different number of codes in either database
-    if (region == US) {
-      j = num_NAcodes;
-    } else {
-      j = num_EUcodes;
-    }
-
-    // for every POWER code in our collection
-    for(i=0 ; i < j; i++) {
-
-      // point to next POWER code, from the right database
-      if (region == US) {
-	code_ptr = (void*)pgm_read_word(NApowerCodes+i);
-      } else {
-	code_ptr = (void*)pgm_read_word(EUpowerCodes+i);
-      }
-
       // Read the carrier frequency from the first byte of code structure
       const uint8_t freq = pgm_read_byte(code_ptr++);
       // set OCR for Timer1 to output this POWER code's carrier frequency
@@ -293,19 +323,6 @@ void port1_isr(void)
       // frequency for the length of time specified in onTime
       // transmitting offTime means no output from the IR emitters for the
       // length of time specified in offTime
-
-      /*
-      // print out all of the pulse pairs
-      for (uint8_t k=0; k<numpairs; k++) {
-	uint8_t ti;
-	ti = (read_bits(bitcompression)) * 4;
-	// read the onTime and offTime from the program memory
-	ontime = pgm_read_word(time_ptr+ti);
-	offtime = pgm_read_word(time_ptr+ti+2);
-	DEBUGP(putstring("\n\rti = "); putnum_ud(ti>>2); putstring("\tPair = "); putnum_ud(ontime));
-	DEBUGP(putstring("\t"); putnum_ud(offtime));
-	}
-      */
 
       // For EACH pair in this code....
       for (uint8_t k=0; k<numpairs; k++) {
@@ -346,7 +363,6 @@ void port1_isr(void)
 
   tvbgone_sleep();
 #endif
-}
 
 
 /****************************** SLEEP FUNCTIONS ********/
@@ -360,9 +376,6 @@ void tvbgone_sleep( void )
   PORTB |= _BV(LED) |       // turn off visible LED
            _BV(IRLED);     // turn off IR LED
 
-  wdt_disable();           // turn off the watchdog (since we want to sleep
-  delay_ten_us(1000);      // wait 10 millisec
-
   MCUCR = _BV(SM1) |  _BV(SE);    // power down mode,  SE enables Sleep Modes
   sleep_cpu();                    // put CPU into Power Down Sleep Mode
 #endif
@@ -373,66 +386,42 @@ void tvbgone_sleep( void )
 
 
 // This function delays the specified number of 10 microseconds
-// it is 'hardcoded' and is calibrated by adjusting DELAY_CNT
-// in main.h Unless you are changing the crystal from 8mhz, dont
-// mess with this.
 void delay_ten_us(uint16_t us) {
-#if 0
-  uint8_t timer;
-  while (us != 0) {
-    // for 8MHz we want to delay 80 cycles per 10 microseconds
-    // this code is tweaked to give about that amount.
-    for (timer=0; timer <= DELAY_CNT; timer++) {
-      NOP;
-      NOP;
-    }
-    NOP;
-    us--;
+  while(us--) {
+    __delay_cycles(F_CPU / 100000);
   }
-#endif
 }
 
 
 // This function quickly pulses the visible LED (connected to PB0, pin 5)
 // This will indicate to the user that a code is being transmitted
-void quickflashLED( void ) {
-#if 0
-  PORTB &= ~_BV(LED);   // turn on visible LED at PB0 by pulling pin to ground
+void quickflashLED(void) {
+  P1OUT |= BIT6;	// turn on visible LED at PB0 by pulling pin to ground
   delay_ten_us(3000);   // 30 millisec delay
-  PORTB |= _BV(LED);    // turn off visible LED at PB0 by pulling pin to +3V
-#endif
+  P1OUT &= ~BIT6;	// turn off visible LED at PB0 by pulling pin to +3V
 }
 
 // This function just flashes the visible LED a couple times, used to
 // tell the user what region is selected
-void quickflashLEDx( uint8_t x ) {
-#if 0
+void quickflashLEDx(uint8_t x) {
   quickflashLED();
-  while(--x) {
-  	wdt_reset();
+  while(x--) {
 	delay_ten_us(15000);     // 150 millisec delay between flahes
 	quickflashLED();
   }
-  wdt_reset();                // kick the dog
-#endif
 }
 
 // This is like the above but way slower, used for when the tvbgone
 // crashes and wants to warn the user
 void flashslowLEDx( uint8_t num_blinks )
 {
-#if 0
-  uint8_t i;
-  for(i=0;i<num_blinks;i++)
-    {
-      // turn on visible LED at PB0 by pulling pin to ground
-      PORTB &= ~_BV(LED);
-      delay_ten_us(50000);         // 500 millisec delay
-      wdt_reset();                 // kick the dog
-      // turn off visible LED at PB0 by pulling pin to +3V
-      PORTB |= _BV(LED);
-      delay_ten_us(50000);	   // 500 millisec delay
-      wdt_reset();                 // kick the dog
-    }
-#endif
+  while(num_blinks--)
+  {
+    // turn on visible LED at PB0 by pulling pin to ground
+    P1OUT |= BIT6;
+    delay_ten_us(50000);         // 500 millisec delay
+    // turn off visible LED at PB0 by pulling pin to +3V
+    P1OUT &= ~BIT6;
+    delay_ten_us(50000);	   // 500 millisec delay
+  }
 }
