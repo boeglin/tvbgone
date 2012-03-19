@@ -20,7 +20,6 @@ depending on a pulldown resistor on pin B1 !
 #include "sync.h"
 #include "codes.h"
 
-void blast_code(const struct IrCode* code);
 /*
 This project transmits a bunch of TV POWER codes, one right after the other,
 with a pause in between each.  (To have a visible indication that it is
@@ -278,7 +277,7 @@ void blast_code(const struct IrCode* code)
   }
   //Flush remaining bits, so that next code starts
   //with a fresh set of 8 bits.
-  bitsleft_r=0;	
+  bitsleft_r=0;
 
   // Stop Timer
   TACTL = TACLR;
@@ -290,9 +289,7 @@ void blast_code(const struct IrCode* code)
   uint8_t region = US;     // by default our code is US
 
   Loop = 0;                // by default we are not going to loop
-#endif
 
-#if 0
   do {	//Execute the code at least once.  If Loop is on, execute forever.
       // Read the carrier frequency from the first byte of code structure
       const uint8_t freq = pgm_read_byte(code_ptr++);
@@ -327,7 +324,7 @@ void blast_code(const struct IrCode* code)
       // For EACH pair in this code....
       for (uint8_t k=0; k<numpairs; k++) {
 	uint8_t ti;
-	
+
 	// Read the next 'n' bits as indicated by the compression variable
 	// The multiply by 4 because there are 2 timing numbers per pair
 	// and each timing number is one word long, so 4 bytes total!
@@ -343,7 +340,7 @@ void blast_code(const struct IrCode* code)
 
       //Flush remaining bits, so that next code starts
       //with a fresh set of 8 bits.
-      bitsleft_r=0;	
+      bitsleft_r=0;
 
       // delay 250 milliseconds before transmitting next POWER code
       delay_ten_us(25000);
@@ -353,33 +350,7 @@ void blast_code(const struct IrCode* code)
     }
   } while (Loop == 1);
 
-  // We are done, no need for a watchdog timer anymore
-  wdt_disable();
-
-  // flash the visible LED on PB0  4 times to indicate that we're done
-  delay_ten_us(65500); // wait maxtime
-  delay_ten_us(65500); // wait maxtime
-  quickflashLEDx(4);
-
-  tvbgone_sleep();
 #endif
-
-
-/****************************** SLEEP FUNCTIONS ********/
-
-void tvbgone_sleep( void )
-{
-#if 0
-  // Shut down everything and put the CPU to sleep
-  TCCR0A = 0;           // turn off frequency generator (should be off already)
-  TCCR0B = 0;           // turn off frequency generator (should be off already)
-  PORTB |= _BV(LED) |       // turn off visible LED
-           _BV(IRLED);     // turn off IR LED
-
-  MCUCR = _BV(SM1) |  _BV(SE);    // power down mode,  SE enables Sleep Modes
-  sleep_cpu();                    // put CPU into Power Down Sleep Mode
-#endif
-}
 
 
 /****************************** LED AND DELAY FUNCTIONS ********/
@@ -397,31 +368,7 @@ void delay_ten_us(uint16_t us) {
 // This will indicate to the user that a code is being transmitted
 void quickflashLED(void) {
   P1OUT |= BIT6;	// turn on visible LED at PB0 by pulling pin to ground
-  delay_ten_us(3000);   // 30 millisec delay
+  delay_ten_us(3000);	// 30 millisec delay
   P1OUT &= ~BIT6;	// turn off visible LED at PB0 by pulling pin to +3V
 }
 
-// This function just flashes the visible LED a couple times, used to
-// tell the user what region is selected
-void quickflashLEDx(uint8_t x) {
-  quickflashLED();
-  while(x--) {
-	delay_ten_us(15000);     // 150 millisec delay between flahes
-	quickflashLED();
-  }
-}
-
-// This is like the above but way slower, used for when the tvbgone
-// crashes and wants to warn the user
-void flashslowLEDx( uint8_t num_blinks )
-{
-  while(num_blinks--)
-  {
-    // turn on visible LED at PB0 by pulling pin to ground
-    P1OUT |= BIT6;
-    delay_ten_us(50000);         // 500 millisec delay
-    // turn off visible LED at PB0 by pulling pin to +3V
-    P1OUT &= ~BIT6;
-    delay_ten_us(50000);	   // 500 millisec delay
-  }
-}

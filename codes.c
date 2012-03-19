@@ -9,10 +9,10 @@
 
 #if NA_CODES || EU_CODES
 const uint16_t code_na000Times[] = {
-        60, 60,
-        60, 2700,
-        120, 60,
-        240, 60,
+	60, 60,
+	60, 2700,
+	120, 60,
+	240, 60,
 };
 const uint16_t code_na004Times[] = {
 	55, 57,
@@ -1445,7 +1445,7 @@ const uint16_t code_na055Times[] = {
 	3, 12778,
 };
 const struct IrCode code_na055Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	27,		// # of pairs
 	2,		// # of bits per index
 	code_na055Times,
@@ -2012,7 +2012,7 @@ const struct IrCode code_na079Code = {
 	}
 };
 const struct IrCode code_na080Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	27,		// # of pairs
 	2,		// # of bits per index
 	code_na055Times,
@@ -4477,7 +4477,7 @@ const uint16_t code_eu038Times[] = {
 	3, 3059,
 };
 const struct IrCode code_eu038Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	11,		// # of pairs
 	2,		// # of bits per index
 	code_eu038Times,
@@ -4668,7 +4668,7 @@ const uint16_t code_eu047Times[] = {
 	3, 1488,
 };
 const struct IrCode code_eu047Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	17,		// # of pairs
 	2,		// # of bits per index
 	code_eu047Times,
@@ -4821,7 +4821,7 @@ const struct IrCode code_eu052Code = {
 		0x9A,
 		0x99,
 	}
-};// Duplicate IR Code? -  Similar to EU017
+};// Duplicate IR Code? - Similar to EU017
 const struct IrCode code_eu053Code = {
 	freq_to_timerval(34483),
 	16,		// # of pairs
@@ -5142,7 +5142,7 @@ const uint16_t code_eu069Times[] = {
 	4, 4999,
 };
 const struct IrCode code_eu069Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu069Times,
@@ -5156,7 +5156,7 @@ const struct IrCode code_eu069Code = {
 	}
 };
 const struct IrCode code_eu070Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu069Times,
@@ -5194,7 +5194,7 @@ const uint16_t code_eu072Times[] = {
 	5, 4999,
 };
 const struct IrCode code_eu072Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu072Times,
@@ -5243,7 +5243,7 @@ const uint16_t code_eu075Times[] = {
 	6, 5474,
 };
 const struct IrCode code_eu075Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu075Times,
@@ -5303,7 +5303,7 @@ const uint16_t code_eu078Times[] = {
 	6, 2787,
 };
 const struct IrCode code_eu078Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	12,		// # of pairs
 	2,		// # of bits per index
 	code_eu078Times,
@@ -5637,7 +5637,7 @@ const uint16_t code_eu090Times[] = {
 	3, 9968,
 };
 const struct IrCode code_eu090Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	29,		// # of pairs
 	3,		// # of bits per index
 	code_eu090Times,
@@ -5721,7 +5721,7 @@ const uint16_t code_eu094Times[] = {
 	3, 9969,
 };
 const struct IrCode code_eu094Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	29,		// # of pairs
 	3,		// # of bits per index
 	code_eu094Times,
@@ -5799,7 +5799,7 @@ const uint16_t code_eu098Times[] = {
 	3, 12731,
 };
 const struct IrCode code_eu098Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	27,		// # of pairs
 	2,		// # of bits per index
 	code_eu098Times,
@@ -5849,7 +5849,7 @@ const struct IrCode code_eu099Code = {
 	}
 };
 const struct IrCode code_eu100Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	27,		// # of pairs
 	2,		// # of bits per index
 	code_eu098Times,
@@ -6244,7 +6244,7 @@ const uint16_t code_eu116Times[] = {
 	3, 10957,
 };
 const struct IrCode code_eu116Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	29,		// # of pairs
 	2,		// # of bits per index
 	code_eu116Times,
@@ -6659,7 +6659,7 @@ const struct IrCode code_eu131Code = {
 	}
 };
 const struct IrCode code_eu132Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu069Times,
@@ -6712,7 +6712,7 @@ const uint16_t code_eu135Times[] = {
 	6, 5188,
 };
 const struct IrCode code_eu135Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	23,		// # of pairs
 	2,		// # of bits per index
 	code_eu135Times,
@@ -6779,7 +6779,7 @@ const uint16_t code_eu138Times[] = {
 	4, 3005,
 };
 const struct IrCode code_eu138Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	11,		// # of pairs
 	2,		// # of bits per index
 	code_eu138Times,
@@ -6797,7 +6797,7 @@ const uint16_t code_eu139Times[] = {
 	14, 6310,
 };
 const struct IrCode code_eu139Code = {
-	0,              // Non-pulsed code
+	0,		// Non-pulsed code
 	30,		// # of pairs
 	3,		// # of bits per index
 	code_eu139Times,
@@ -6819,19 +6819,19 @@ const struct IrCode code_eu139Code = {
 #endif
 #if NA_CODES || EU_CODES
 const struct IrCode code_na000Code = {
-        freq_to_timerval(38400),
-        26,             // # of pairs
-        2,              // # of bits per index
-        code_na000Times,
-        {
-                0xE2,
-                0x20,
-                0x80,
-                0x78,
-                0x88,
-                0x20,
-                0x10,
-        }
+	freq_to_timerval(38400),
+	26,		// # of pairs
+	2,		// # of bits per index
+	code_na000Times,
+	{
+		0xE2,
+		0x20,
+		0x80,
+		0x78,
+		0x88,
+		0x20,
+		0x10,
+	}
 };
 const struct IrCode code_na004Code = {
 	freq_to_timerval(38610),
@@ -6925,7 +6925,7 @@ const struct IrCode* const NApowerCodes[] = {
 #if NA_CODES
 	&code_na000Code,
 	&code_na001Code,
-       	&code_na002Code,
+	&code_na002Code,
 	&code_na003Code,
 	&code_na004Code,
 	&code_na005Code,
@@ -7045,7 +7045,7 @@ const struct IrCode* const NApowerCodes[] = {
 	&code_na118Code,
 	&code_na119Code,
 	&code_na120Code,
-	&code_na121Code,	
+	&code_na121Code,
 	&code_na122Code,
 	&code_na123Code,
 	&code_na124Code,
@@ -7074,7 +7074,7 @@ const struct IrCode* const EUpowerCodes[] = {
 	&code_na021Code,
 	&code_na022Code,
 #endif
-        &code_eu000Code,
+	&code_eu000Code,
 	&code_eu001Code,
 	&code_eu002Code,
 	&code_eu004Code,

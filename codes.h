@@ -1,3 +1,6 @@
+#ifndef __CODES_H__
+#define __CODES_H__
+
 // The structure of compressed code entries
 struct IrCode {
   uint8_t timer_val;
@@ -12,3 +15,6 @@ extern const struct IrCode* const EUpowerCodes[];
 
 const uint8_t num_NAcodes;
 const uint8_t num_EUcodes;
+
+#endif
+
