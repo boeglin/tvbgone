@@ -20,6 +20,9 @@ depending on a pulldown resistor on pin B1 !
 #include "sync.h"
 #include "codes.h"
 
+#define BIT_LED BIT6
+#define BIT_IRLED BIT5
+
 /*
 This project transmits a bunch of TV POWER codes, one right after the other,
 with a pause in between each.  (To have a visible indication that it is
@@ -75,25 +78,18 @@ The hardware for this project is very simple:
                     make burn-fuse_cr
 */
 
-__attribute__((interrupt(TIMER0_A0_VECTOR)))
-void timer_pwm(void)
-{
-  // Toggle LED
-  P1OUT ^= BIT0;
-}
-
 /* This function is the 'workhorse' of transmitting IR codes.
    Given the on and off times, it turns on the PWM output on and off
    to generate one 'pair' from a long code. Each code has ~50 pairs! */
 void xmitCodeElement(uint16_t ontime, uint16_t offtime, uint8_t PWM_code )
 {
   if(PWM_code) {
-    // Start PWM interrupt
-    TACCTL0 |= CCIE;
+    // Start PWM output
+    P1SEL |= BIT_IRLED;
   } else {
     // However some codes dont use PWM in which case we just turn the IR
     // LED on for the period of time.
-    P1OUT |= BIT0;
+    P1OUT |= BIT_IRLED;
   }
 
   // Now we wait, allowing the PWM hardware to pulse out the carrier
@@ -102,11 +98,11 @@ void xmitCodeElement(uint16_t ontime, uint16_t offtime, uint8_t PWM_code )
 
   // Now we have to turn it off so disable the PWM output
   if(PWM_code)
-    TACCTL0 &= ~CCIE;
+    P1SEL &= ~BIT_IRLED;
 
   // And make sure that the IR LED is off too (since the PWM may have
   // been stopped while the LED is on!)
-  P1OUT &= ~BIT0;
+  P1OUT &= ~BIT_IRLED;
 
   // Now we wait for the specified 'off' time
   delay_ten_us(offtime);
@@ -222,7 +218,9 @@ int main(void)
     // Interrupt wakeup!
 
     // Sync the clock
+    delay_ten_us(25000);
     sync();
+    delay_ten_us(25000);
 
     // Blast codes
     int i;
@@ -262,8 +260,8 @@ void blast_code(const struct IrCode* code)
   TACTL = TASSEL_2 | TACLR;
   // Set period
   TACCR0 = code->timer_val;
-  // Set simple Compare mode
-  TACCTL0 = 0;
+  // Set Compare mode, Toggle output
+  TACCTL0 = OUTMOD_4;
 
   // Start timer
   TACTL |= MC_1;
@@ -367,8 +365,8 @@ void delay_ten_us(uint16_t us) {
 // This function quickly pulses the visible LED (connected to PB0, pin 5)
 // This will indicate to the user that a code is being transmitted
 void quickflashLED(void) {
-  P1OUT |= BIT6;	// turn on visible LED at PB0 by pulling pin to ground
+  P1OUT |= BIT_LED;	// turn on visible LED at PB0 by pulling pin to ground
   delay_ten_us(3000);	// 30 millisec delay
-  P1OUT &= ~BIT6;	// turn off visible LED at PB0 by pulling pin to +3V
+  P1OUT &= ~BIT_LED;	// turn off visible LED at PB0 by pulling pin to +3V
 }
 
