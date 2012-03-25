@@ -17,7 +17,6 @@ depending on a pulldown resistor on pin B1 !
 #include <stdint.h>
 
 #include "main.h"
-#include "sync.h"
 #include "codes.h"
 
 #define BIT_LED BIT6
@@ -179,17 +178,15 @@ int main(void)
   // Stop watchdog
   WDTCTL = WDTPW + WDTHOLD;
 
-  // Set clock to around 8 MHz: RSEL13, DCO3, MOD0
-  // Set XT2 off, XTS lf, DIVA 3
+  // Set clock to 8 MHz
+  // Set XT2 off
   DCOCTL = 0;
-  BCSCTL1 = XT2OFF | DIVA_3 | 0x0d; // RSEL
-  DCOCTL = 0x60; //DCO
-  // SELM dco, DIVM 0, SELS dco, DIVS 0, DCOR 0
+  BCSCTL1 = XT2OFF | CALBC1_8MHZ;
+  DCOCTL = CALDCO_8MHZ;
   BCSCTL2 = 0;
-  // XT2S 0, LFXT1S 0, XCAP 12.5pF
-  BCSCTL3 = XCAP_3;
+  BCSCTL3 = 0;
 
-  // Now, MCLK & SMCLK are 8 MHz, ACLK is 4096 Hz
+  // Now, MCLK & SMCLK are 8 MHz
 
   // Make everything output, button an input
   P1DIR = ~BIT3;
@@ -216,10 +213,6 @@ int main(void)
     LPM3;
 
     // Interrupt wakeup!
-
-    // Sync the clock
-    delay_ten_us(25000);
-    sync();
     delay_ten_us(25000);
 
     // Blast codes
