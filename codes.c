@@ -7014,6 +7014,7 @@ const struct IrCode* const NApowerCodes[] = {
 	&code_na088Code,
 	&code_na089Code,
 	&code_na090Code,
+#if !EU_CODES
 	&code_na091Code,
 	&code_na092Code,
 	&code_na093Code,
@@ -7038,7 +7039,6 @@ const struct IrCode* const NApowerCodes[] = {
 	&code_na112Code,
 	&code_na113Code,
 	&code_na114Code,
-#if !EU_CODES
 	&code_na115Code,
 	&code_na116Code,
 	&code_na117Code,
@@ -7182,7 +7182,6 @@ const struct IrCode* const EUpowerCodes[] = {
 	&code_eu112Code,
 	&code_eu113Code,
 	&code_eu114Code,
-#if !NA_CODES
 	&code_eu115Code,
 	&code_eu116Code,
 	&code_eu117Code,
@@ -7208,7 +7207,6 @@ const struct IrCode* const EUpowerCodes[] = {
 	&code_eu137Code,
 	&code_eu138Code,
 	&code_eu139Code,
-#endif
 #endif
 };
 

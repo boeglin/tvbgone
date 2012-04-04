@@ -20,8 +20,11 @@ depending on a pulldown resistor on pin B1 !
 #include "codes.h"
 
 #define BIT_BUTTON BIT3
-#define BIT_LED BIT6
 #define BIT_IRLED BIT5
+
+#if WITH_LED
+#define BIT_LED BIT6
+#endif
 
 /*
 This project transmits a bunch of TV POWER codes, one right after the other,
@@ -224,16 +227,20 @@ int main(void)
 
     // Blast codes
     int i;
-    for(i = 0; i < num_NAcodes; ++i)
-    {
-      blast_code(NApowerCodes[i]);
-      quickflashLED();
-      delay_ten_us(25000);
-    }
     for(i = 0; i < num_EUcodes; ++i)
     {
       blast_code(EUpowerCodes[i]);
+#if WITH_LED
       quickflashLED();
+#endif
+      delay_ten_us(25000);
+    }
+    for(i = 0; i < num_NAcodes; ++i)
+    {
+      blast_code(NApowerCodes[i]);
+#if WITH_LED
+      quickflashLED();
+#endif
       delay_ten_us(25000);
     }
   }
@@ -281,75 +288,6 @@ void blast_code(const struct IrCode* code)
   TACTL = TACLR;
 }
 
-#if 0
-  uint16_t ontime, offtime;
-  uint8_t i,j, Loop;
-  uint8_t region = US;     // by default our code is US
-
-  Loop = 0;                // by default we are not going to loop
-
-  do {	//Execute the code at least once.  If Loop is on, execute forever.
-      // Read the carrier frequency from the first byte of code structure
-      const uint8_t freq = pgm_read_byte(code_ptr++);
-      // set OCR for Timer1 to output this POWER code's carrier frequency
-      OCR0A = freq;
-
-      // Print out the frequency of the carrier and the PWM settings
-      DEBUGP(putstring("\n\rOCR1: "); putnum_ud(freq););
-      DEBUGP(uint16_t x = (freq+1) * 2; putstring("\n\rFreq: "); putnum_ud(F_CPU/x););
-
-      // Get the number of pairs, the second byte from the code struct
-      const uint8_t numpairs = pgm_read_byte(code_ptr++);
-      DEBUGP(putstring("\n\rOn/off pairs: "); putnum_ud(numpairs));
-
-      // Get the number of bits we use to index into the timer table
-      // This is the third byte of the structure
-      const uint8_t bitcompression = pgm_read_byte(code_ptr++);
-      DEBUGP(putstring("\n\rCompression: "); putnum_ud(bitcompression));
-
-      // Get pointer (address in memory) to pulse-times table
-      // The address is 16-bits (2 byte, 1 word)
-      const void* time_ptr = (void*)pgm_read_word(code_ptr);
-      code_ptr+=2;
-
-      // Transmit all codeElements for this POWER code
-      // (a codeElement is an onTime and an offTime)
-      // transmitting onTime means pulsing the IR emitters at the carrier
-      // frequency for the length of time specified in onTime
-      // transmitting offTime means no output from the IR emitters for the
-      // length of time specified in offTime
-
-      // For EACH pair in this code....
-      for (uint8_t k=0; k<numpairs; k++) {
-	uint8_t ti;
-
-	// Read the next 'n' bits as indicated by the compression variable
-	// The multiply by 4 because there are 2 timing numbers per pair
-	// and each timing number is one word long, so 4 bytes total!
-	ti = (read_bits(bitcompression)) * 4;
-
-	// read the onTime and offTime from the program memory
-	ontime = pgm_read_word(time_ptr+ti);  // read word 1 - ontime
-	offtime = pgm_read_word(time_ptr+ti+2);  // read word 2 - offtime
-
-	// transmit this codeElement (ontime and offtime)
-	xmitCodeElement(ontime, offtime, (freq!=0));
-      }
-
-      //Flush remaining bits, so that next code starts
-      //with a fresh set of 8 bits.
-      bitsleft_r=0;
-
-      // delay 250 milliseconds before transmitting next POWER code
-      delay_ten_us(25000);
-
-      // visible indication that a code has been output.
-      quickflashLED();
-    }
-  } while (Loop == 1);
-
-#endif
-
 
 /****************************** LED AND DELAY FUNCTIONS ********/
 
@@ -362,6 +300,7 @@ void delay_ten_us(uint16_t us) {
 }
 
 
+#if WITH_LED
 // This function quickly pulses the visible LED (connected to PB0, pin 5)
 // This will indicate to the user that a code is being transmitted
 void quickflashLED(void) {
@@ -369,4 +308,5 @@ void quickflashLED(void) {
   delay_ten_us(3000);	// 30 millisec delay
   P1OUT &= ~BIT_LED;	// turn off visible LED at PB0 by pulling pin to +3V
 }
+#endif
 
