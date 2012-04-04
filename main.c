@@ -19,6 +19,7 @@ depending on a pulldown resistor on pin B1 !
 #include "main.h"
 #include "codes.h"
 
+#define BIT_BUTTON BIT3
 #define BIT_LED BIT6
 #define BIT_IRLED BIT5
 
@@ -189,19 +190,25 @@ int main(void)
   // Now, MCLK & SMCLK are 8 MHz
 
   // Make everything output, button an input
-  P1DIR = ~BIT3;
+  P1DIR = ~BIT_BUTTON;
   P2DIR = 0xff;
+  // Pull Up resistor
+  P1REN = BIT_BUTTON;
 
   // Make everything a Digital I/O
   P1SEL = 0;
-  P2SEL = BIT6 | BIT7;
+  P2SEL = 0;
+  P1SEL2 = 0;
+  P2SEL2 = 0;
 
   // turn off LEDs, and everything else
-  P1OUT = 0;
+  // BIT_BUTTON is High for Pull Up
+  P1OUT = BIT_BUTTON;
   P2OUT = 0;
 
-  // enable button (P1.3) interrupt
-  P1IE = BIT3;
+  // enable button (P1.3) interrupt on low-to high transition
+  P1IE = BIT_BUTTON;
+  P1IES = 0;
   P2IE = 0;
 
   // enable interupts
